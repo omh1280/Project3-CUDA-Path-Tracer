@@ -74,12 +74,8 @@ void scatterRay(
         const Material &m,
         thrust::default_random_engine &rng) 
 {
-	if (m.hasReflective == 0.0f) {
-		pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
-		pathSegment.ray.origin = intersect;
-	}
-	else {
-		pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, normal);
-		pathSegment.ray.origin = intersect;
-	}
+
+	pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
+	pathSegment.ray.origin = intersect;
+	pathSegment.remainingBounces--;
 }

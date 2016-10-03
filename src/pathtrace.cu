@@ -272,10 +272,15 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 	if (idx < num_paths)
 	{
 		ShadeableIntersection intersection = shadeableIntersections[idx];
+
+		if (pathSegments[idx].remainingBounces < 0) {
+			return;
+		}
+
 		if (intersection.t > 0.0f) { // if the intersection exists...
 			
 			// Set up the RNG
-			thrust::default_random_engine rng = makeSeededRandomEngine(iter, idx, 0);
+			thrust::default_random_engine rng = makeSeededRandomEngine(iter, idx, pathSegments[idx].remainingBounces);
 			thrust::uniform_real_distribution<float> u01(0, 1);
 
 			Material material = materials[intersection.materialId];
@@ -284,6 +289,8 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 			// If the material indicates that the object was a light, "light" the ray
 			if (material.emittance > 0.0f) {
 				pathSegments[idx].color *= (materialColor * material.emittance);
+
+				pathSegments[idx].remainingBounces = -1;
 			}
 			// Otherwise, do some pseudo-lighting computation. This is actually more
 			// like what you would expect from shading in a rasterizer like OpenGL.
@@ -299,6 +306,7 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 		}
 		else {
 			pathSegments[idx].color = glm::vec3(0.0f);
+			pathSegments[idx].remainingBounces = -1;
 		}
 	}
 }
@@ -307,6 +315,7 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 __global__ void finalGather(int nPaths, glm::vec3 * image, PathSegment * iterationPaths)
 {
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
+
 
 	if (index < nPaths)
 	{
