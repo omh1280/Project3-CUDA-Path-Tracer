@@ -292,16 +292,8 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 
 				pathSegments[idx].remainingBounces = -1;
 			}
-			// Otherwise, do some pseudo-lighting computation. This is actually more
-			// like what you would expect from shading in a rasterizer like OpenGL.
-			// TODO: replace this! you should be able to start with basically a one-liner
 			else {
-				pathSegments[idx].color *= materialColor;
 				scatterRay(pathSegments[idx], getPointOnRay(pathSegments[idx].ray, intersection.t), intersection.surfaceNormal, material, rng);
-
-				//float lightTerm = glm::dot(intersection.surfaceNormal, glm::vec3(0.0f, 1.0f, 0.0f));
-				//pathSegments[idx].color *= (materialColor * lightTerm) * 0.3f + ((1.0f - intersection.t * 0.02f) * materialColor) * 0.7f;
-				//pathSegments[idx].color *= u01(rng); // apply some noise because why not
 			}
 		}
 		else {
@@ -316,8 +308,7 @@ __global__ void finalGather(int nPaths, glm::vec3 * image, PathSegment * iterati
 {
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-
-	if (index < nPaths)
+	if (index < nPaths && iterationPaths[index].remainingBounces < 0)
 	{
 		PathSegment iterationPath = iterationPaths[index];
 		image[iterationPath.pixelIndex] += iterationPath.color;
