@@ -4,6 +4,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/random.h>
 #include <thrust/remove.h>
+#include <thrust/device_vector.h>
+#include <thrust/remove.h>
 
 #include "sceneStructs.h"
 #include "scene.h"
@@ -315,6 +317,15 @@ __global__ void finalGather(int nPaths, glm::vec3 * image, PathSegment * iterati
 	}
 }
 
+struct streamCompactTest
+{
+	__host__ __device__
+	bool operator()(const PathSegment x)
+	{
+		return (x.remainingBounces == -1);
+	}
+};
+
 /**
  * Wrapper for the __global__ call that sets up the kernel calls and does a ton
  * of memory management
@@ -388,28 +399,32 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 		cudaDeviceSynchronize();
 		depth++;
 
-		// TODO:
-		// --- Shading Stage ---
-		// Shade path segments based on intersections and generate new rays by
-		// evaluating the BSDF.
-		// Start off with just a big kernel that handles all the different
-		// materials you have in the scenefile.
 		// TODO: compare between directly shading the path segments and shading
 		// path segments that have been reshuffled to be contiguous in memory.
 
 		shadeRealMaterial<<<numblocksPathSegmentTracing, blockSize1d>>> (iter, num_paths, dev_intersections, dev_paths, dev_materials);
-		// TODO: Make this from stream compaction results
+		
+		// Assemble this iteration and apply it to the image
+		dim3 numBlocksPixels = (pixelcount + blockSize1d - 1) / blockSize1d;
+		finalGather << <numBlocksPixels, blockSize1d >> >(num_paths, dev_image, dev_paths);
+
+		// Stream compaction
+		// Create device_vector for dev_paths
+		thrust::device_vector<PathSegment> thrust_dev_paths(dev_paths, dev_paths + num_paths);
+		// Remove_if
+		thrust::device_vector<PathSegment>::iterator new_end = thrust::remove_if(thrust_dev_paths.begin(), 
+			thrust_dev_paths.end(), streamCompactTest());
+		// Create device_vector for compacted paths
+		thrust::device_vector<PathSegment> compacted(thrust_dev_paths.begin(), new_end);
+		// Update number of active paths
+		num_paths = thrust::distance(thrust_dev_paths.begin(), new_end);
+		// Cast back to raw pointer
+		dev_paths = thrust::raw_pointer_cast(&compacted[0]);
 
 		if (depth == traceDepth) {
 			iterationComplete = true;
 		}
 	}
-
-	// Assemble this iteration and apply it to the image
-	dim3 numBlocksPixels = (pixelcount + blockSize1d - 1) / blockSize1d;
-	finalGather<<<numBlocksPixels, blockSize1d>>>(num_paths, dev_image, dev_paths);
-
-    ///////////////////////////////////////////////////////////////////////////
 
     // Send results to OpenGL buffer for rendering
     sendImageToPBO<<<blocksPerGrid2d, blockSize2d>>>(pbo, cam.resolution, iter, dev_image);
