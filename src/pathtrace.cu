@@ -322,7 +322,7 @@ struct streamCompactTest
 	__host__ __device__
 	bool operator()(const PathSegment x)
 	{
-		return (x.remainingBounces == -1);
+		return (x.remainingBounces <= 0);
 	}
 };
 
@@ -417,11 +417,11 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 		// Create device_vector for compacted paths
 		thrust::device_vector<PathSegment> compacted(thrust_dev_paths.begin(), new_end);
 		// Update number of active paths
-		num_paths = thrust::distance(thrust_dev_paths.begin(), new_end);
+		num_paths = thrust::distance(compacted.begin(), compacted.end());
 		// Cast back to raw pointer
-		dev_paths = thrust::raw_pointer_cast(&compacted[0]);
+		//dev_paths = thrust::raw_pointer_cast(&compacted[0]);
 
-		if (depth == traceDepth) {
+		if (num_paths == 0 || depth == traceDepth) {
 			iterationComplete = true;
 		}
 	}
