@@ -1,6 +1,7 @@
 #include "main.h"
 #include "preview.h"
 #include <cstring>
+#include <chrono>
 
 static std::string startTimeString;
 
@@ -25,6 +26,8 @@ int iteration;
 
 int width;
 int height;
+
+static std::chrono::system_clock::time_point begin_time;
 
 //-------------------------------
 //-------------MAIN--------------
@@ -121,11 +124,13 @@ void runCuda() {
 
     // Map OpenGL buffer object for writing from CUDA on a single GPU
     // No data is moved (Win & Linux). When mapped to CUDA, OpenGL should not use this buffer
-
     if (iteration == 0) {
+		begin_time = std::chrono::high_resolution_clock::now();
+
         pathtraceFree();
         pathtraceInit(scene);
     }
+	
 
     if (iteration < renderState->iterations) {
         uchar4 *pbo_dptr = NULL;
@@ -138,6 +143,11 @@ void runCuda() {
 
         // unmap buffer object
         cudaGLUnmapBufferObject(pbo);
+
+		if (iteration == 100) {
+			auto end = std::chrono::high_resolution_clock::now();
+			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin_time).count() << "ns" << std::endl;
+		}
     } else {
         saveImage();
         pathtraceFree();
