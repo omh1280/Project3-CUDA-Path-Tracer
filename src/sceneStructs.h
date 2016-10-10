@@ -38,8 +38,15 @@ struct Material {
     } specular;
     float hasReflective;
     float hasRefractive;
+	bool hasTexture = false;
     float indexOfRefraction;
     float emittance;
+	float *data;
+	int x;
+	int y;
+
+	// Defined in scene.cpp
+	static float *generateTexture(int x, int y);
 };
 
 struct Camera {
@@ -75,4 +82,5 @@ struct ShadeableIntersection {
   float t;
   glm::vec3 surfaceNormal;
   int materialId;
+  glm::vec2 uv;
 };

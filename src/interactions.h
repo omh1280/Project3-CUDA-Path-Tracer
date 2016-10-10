@@ -1,6 +1,8 @@
 #pragma once
 
+#include <stb_image.h>
 #include "intersections.h"
+
 
 // CHECKITOUT
 /**
@@ -69,21 +71,40 @@ glm::vec3 calculateRandomDirectionInHemisphere(
 __host__ __device__
 void scatterRay(
 		PathSegment & pathSegment,
-        glm::vec3 intersect,
-        glm::vec3 normal,
+        ShadeableIntersection intersection,
         const Material &m,
-        thrust::default_random_engine &rng) 
+        thrust::default_random_engine &rng,
+		float * texture) 
 {
+	glm::vec3 intersect = getPointOnRay(pathSegment.ray, intersection.t);
+	glm::vec3 normal = intersection.surfaceNormal;
+
+	glm::vec3 color;
+	if (!m.hasTexture) {
+		color = m.color;
+	}
+	else {
+		glm::ivec2 pixel((int)floor(intersection.uv.x * (float)m.x), (int)floor(intersection.uv.y * (float)m.y));
+		int index = 3 * (pixel.y * m.x + pixel.x);
+
+		//printf("Index: %i, %i, %i\n", index, pixel.x, pixel.y);
+		float r = texture[index];
+		float g = texture[index + 1];
+		float b = texture[index + 2];
+
+		color = glm::vec3(r, g, b);
+	}
+
 	thrust::uniform_real_distribution<float> u01(0, 1);
 	if (u01(rng) > m.hasReflective) {
 		pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
-		pathSegment.color *= (1.0f - m.hasReflective) * m.color;
+		pathSegment.color *= (1.0f - m.hasReflective) * color;
 		pathSegment.ray.origin = intersect;
 		pathSegment.remainingBounces--;
 	}
 	else {
 		pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, normal);
-		pathSegment.color *= m.hasReflective * m.color;
+		pathSegment.color *= m.hasReflective * color;
 		pathSegment.ray.origin = intersect;
 		pathSegment.remainingBounces--;
 	}

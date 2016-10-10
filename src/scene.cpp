@@ -3,6 +3,7 @@
 #include <cstring>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <stb_image.h>
 
 Scene::Scene(string filename) {
     cout << "Reading scene from " << filename << " ..." << endl;
@@ -183,7 +184,9 @@ int Scene::loadMaterial(string materialid) {
                 newMaterial.indexOfRefraction = atof(tokens[1].c_str());
             } else if (strcmp(tokens[0].c_str(), "EMITTANCE") == 0) {
                 newMaterial.emittance = atof(tokens[1].c_str());
-            }
+			} else if (strcmp(tokens[0].c_str(), "TEXTURE") == 0) {
+				newMaterial.hasTexture = true;
+			}
         }
         materials.push_back(newMaterial);
         return 1;
@@ -203,4 +206,17 @@ void Scene::moveGeometry(float t) {
 		g.invTranspose = glm::inverseTranspose(g.transform);
 	}
 
+}
+
+float * Material::generateTexture(int x, int y) {
+	float * ret = new float[3 * x * y];
+	for (int i = 0; i < y; i++) {
+		for (int j = 0; j < x; j++) {
+			int index = 3 * (i * x + j);
+			ret[index] = (float)i / (float)x;
+			ret[index + 1] = 0.0f;
+			ret[index + 2] = 0.0f;
+		}
+	}
+	return ret;
 }

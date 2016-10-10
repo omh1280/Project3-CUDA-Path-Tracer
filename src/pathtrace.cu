@@ -81,6 +81,7 @@ static Material * dev_materials = NULL;
 static PathSegment * dev_paths = NULL;
 static ShadeableIntersection * dev_intersections = NULL;
 static ShadeableIntersection * dev_first_intersections = NULL;
+static float * dev_texture = NULL;
 // TODO: static variables for device memory, any extra info you need, etc
 // ...
 
@@ -96,6 +97,13 @@ void pathtraceInit(Scene *scene) {
 
   	cudaMalloc(&dev_geoms, scene->geoms.size() * sizeof(Geom));
   	cudaMemcpy(dev_geoms, scene->geoms.data(), scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
+
+	// Initialize texture
+	//int x, y, n;
+	//unsigned char *data = stbi_load("texture.jpg", &x, &y, &n, 0);
+	float *data = Material::generateTexture(1024, 1024);
+	cudaMalloc(&dev_texture, 3 * 1024 * 1024 * sizeof(float));
+	cudaMemcpy(dev_texture, data, 3 * 1024 * 1024 * sizeof(float), cudaMemcpyHostToDevice);
 
   	cudaMalloc(&dev_materials, scene->materials.size() * sizeof(Material));
   	cudaMemcpy(dev_materials, scene->materials.data(), scene->materials.size() * sizeof(Material), cudaMemcpyHostToDevice);
@@ -185,12 +193,14 @@ __global__ void computeIntersections(
 
 		float t;
 		glm::vec3 intersect_point;
+		glm::vec2 uv;
 		glm::vec3 normal;
 		float t_min = FLT_MAX;
 		int hit_geom_index = -1;
 		bool outside = true;
 
 		glm::vec3 tmp_intersect;
+		glm::vec2 tmp_uv;
 		glm::vec3 tmp_normal;
 
 		// naive parse through global geoms
@@ -205,9 +215,8 @@ __global__ void computeIntersections(
 			}
 			else if (geom.type == SPHERE)
 			{
-				t = sphereIntersectionTest(geom, pathSegment.ray, tmp_intersect, tmp_normal, outside);
+				t = sphereIntersectionTest(geom, pathSegment.ray, tmp_intersect, tmp_uv, tmp_normal, outside);
 			}
-			// TODO: add more intersection tests here... triangle? metaball? CSG?
 
 			// Compute the minimum t from the intersection tests to determine what
 			// scene geometry object was hit first.
@@ -216,6 +225,7 @@ __global__ void computeIntersections(
 				t_min = t;
 				hit_geom_index = i;
 				intersect_point = tmp_intersect;
+				uv = tmp_uv;
 				normal = tmp_normal;
 			}
 		}
@@ -230,6 +240,7 @@ __global__ void computeIntersections(
 			intersections[path_index].t = t_min;
 			intersections[path_index].materialId = geoms[hit_geom_index].materialid;
 			intersections[path_index].surfaceNormal = normal;
+			intersections[path_index].uv = uv;
 		}
 	}
 }
@@ -288,7 +299,7 @@ __global__ void shadeFakeMaterial (
 }
 
 __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection * shadeableIntersections,
-	PathSegment * pathSegments, Material * materials)
+	PathSegment * pathSegments, Material * materials, float * texture)
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (idx < num_paths)
@@ -315,7 +326,7 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 				pathSegments[idx].remainingBounces = -1;
 			}
 			else {
-				scatterRay(pathSegments[idx], getPointOnRay(pathSegments[idx].ray, intersection.t), intersection.surfaceNormal, material, rng);
+				scatterRay(pathSegments[idx], intersection, material, rng, texture);
 			}
 		}
 		else {
@@ -427,7 +438,7 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 		depth++;
 
 		// Shading
-		shadeRealMaterial << <numblocksPathSegmentTracing, blockSize1d >> > (iter, num_paths, dev_intersections, dev_paths, dev_materials);
+		shadeRealMaterial << <numblocksPathSegmentTracing, blockSize1d >> > (iter, num_paths, dev_intersections, dev_paths, dev_materials, dev_texture);
 
 #endif
 		
