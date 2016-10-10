@@ -346,20 +346,6 @@ struct streamCompactTest
 	}
 };
 
-void moveGeometry(float t) {
-
-	for (int i = 0; i < hst_scene->geoms.size(); i++) {
-		Geom &g = hst_scene->geoms[i];
-		glm::vec3 new_t = glm::mix(g.translation, g.translation + g.t_motion, t);
-		
-		g.transform = utilityCore::buildTransformationMatrix(
-			new_t, g.rotation, g.scale);
-		g.inverseTransform = glm::inverse(g.transform);
-		g.invTranspose = glm::inverseTranspose(g.transform);
-	}
-
-	cudaMemcpy(dev_geoms, hst_scene->geoms.data(), hst_scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
-}
 /**
  * Wrapper for the __global__ call that sets up the kernel calls and does a ton
  * of memory management
@@ -390,7 +376,8 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 	thrust::default_random_engine rng = makeSeededRandomEngine(iter, 0, 0);
 	thrust::uniform_real_distribution<float> u01(0, 1);
 	float t = u01(rng);
-	moveGeometry(t);
+	hst_scene->moveGeometry(t);
+	cudaMemcpy(dev_geoms, hst_scene->geoms.data(), hst_scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
 
 	// Shoot ray into scene, bounce between objects, push shading chunks
 	bool iterationComplete = false;

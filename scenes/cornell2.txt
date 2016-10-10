@@ -58,6 +58,16 @@ REFR        0
 REFRIOR     0
 EMITTANCE   25
 
+// Cube
+MATERIAL 6
+RGB         .6 .98 .98
+SPECEX      0
+SPECRGB     .98 .98 .98
+REFL        .3
+REFR        0
+REFRIOR     0
+EMITTANCE   0
+
 // Camera
 CAMERA
 RES         600 600
@@ -101,6 +111,7 @@ material 1
 TRANS       0 5 -5
 ROTAT       0 90 0
 SCALE       .01 10 10
+R_MOTION   0 0  0
 
 // Left wall
 OBJECT 4
@@ -122,10 +133,10 @@ SCALE       .01 10 10
 OBJECT 6
 sphere
 material 4
-TRANS       -1 4 -1
+TRANS       1 4 -1
 ROTAT       0 0 0
 SCALE       3 3 3
-T_MOTION    3 0 0
+T_MOTION    .5 .5 0
 
 // Light 2
 OBJECT 7
@@ -134,3 +145,36 @@ material 5
 TRANS       5  7 0
 ROTAT	    0  0 0
 SCALE       1  1 1
+
+// Moving cube
+OBJECT 8
+cube
+material 3
+TRANS -1 2 3
+ROTAT 0 25 0
+SCALE 1 3 1
+R_MOTION 0 0 25
+
+// Light 3
+OBJECT 9
+cube
+material 5
+TRANS -3 0 0
+ROTAT 0 -45 0
+SCALE .5 .5 3
+
+// Light 4
+OBJECT 10
+cube
+material 5
+TRANS 0 .6 4.5
+ROTAT 0 0 0
+SCALE 5 .1 .1
+
+// Cube 
+OBJECT 11
+cube
+material 6
+TRANS -2 6 -1
+ROTAT 0 45 30
+SCALE 3 4 2

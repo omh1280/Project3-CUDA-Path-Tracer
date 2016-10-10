@@ -189,3 +189,18 @@ int Scene::loadMaterial(string materialid) {
         return 1;
     }
 }
+
+void Scene::moveGeometry(float t) {
+
+	for (int i = 0; i < geoms.size(); i++) {
+		Geom &g = geoms[i];
+		glm::vec3 new_t = glm::mix(g.translation, g.translation + g.t_motion, t);
+		glm::vec3 new_r = glm::mix(g.rotation, g.rotation + g.r_motion, t);
+
+		g.transform = utilityCore::buildTransformationMatrix(
+			new_t, new_r, g.scale);
+		g.inverseTransform = glm::inverse(g.transform);
+		g.invTranspose = glm::inverseTranspose(g.transform);
+	}
+
+}
