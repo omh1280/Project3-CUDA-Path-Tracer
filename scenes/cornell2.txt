@@ -71,11 +71,11 @@ EMITTANCE   0
 // Camera
 CAMERA
 RES         600 600
-FOVY        45
+FOVY        60
 ITERATIONS  5000
 DEPTH       6
 FILE        cornell2
-EYE         0.0 5 10.5
+EYE         0.0 5 6.5
 LOOKAT      0 5 0
 UP          0 1 0
 
@@ -170,6 +170,7 @@ material 5
 TRANS 0 .6 4.5
 ROTAT 0 0 0
 SCALE 5 .1 .1
+
 
 // Cube 
 OBJECT 11
