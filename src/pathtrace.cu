@@ -18,6 +18,7 @@
 
 #define ERRORCHECK 1
 //#define CACHE_FIRST_BOUNCE
+#define ANTIALIAS
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define checkCUDAError(msg) checkCUDAErrorFn(msg, FILENAME, __LINE__)
@@ -130,6 +131,18 @@ __global__ void generateRayFromCamera(Camera cam, int iter, int traceDepth, Path
 	int x = (blockIdx.x * blockDim.x) + threadIdx.x;
 	int y = (blockIdx.y * blockDim.y) + threadIdx.y;
 
+	float x_jitter, y_jitter = 0.0f;
+#ifdef ANTIALIAS
+	thrust::default_random_engine rng_x = makeSeededRandomEngine(iter, x, 0);
+	thrust::default_random_engine rng_y = makeSeededRandomEngine(iter, y, 0);
+
+	thrust::uniform_real_distribution<float> u01(-0.5f, 0.5f);
+	
+	x_jitter = u01(rng_x);
+	y_jitter = u01(rng_y);
+
+#endif
+
 	if (x < cam.resolution.x && y < cam.resolution.y) {
 		int index = x + (y * cam.resolution.x);
 		PathSegment & segment = pathSegments[index];
@@ -139,8 +152,8 @@ __global__ void generateRayFromCamera(Camera cam, int iter, int traceDepth, Path
 
 		// TODO: implement antialiasing by jittering the ray
 		segment.ray.direction = glm::normalize(cam.view
-			- cam.right * cam.pixelLength.x * ((float)x - (float)cam.resolution.x * 0.5f)
-			- cam.up * cam.pixelLength.y * ((float)y - (float)cam.resolution.y * 0.5f)
+			- cam.right * cam.pixelLength.x * (((float)x + x_jitter) - (float)cam.resolution.x * 0.5f)
+			- cam.up * cam.pixelLength.y * (((float)y + y_jitter) - (float)cam.resolution.y * 0.5f)
 			);
 
 		segment.pixelIndex = index;
