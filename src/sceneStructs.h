@@ -26,6 +26,8 @@ struct Geom {
     glm::mat4 transform;
     glm::mat4 inverseTransform;
     glm::mat4 invTranspose;
+	glm::vec3 t_motion;
+	glm::vec3 r_motion;
 };
 
 struct Material {

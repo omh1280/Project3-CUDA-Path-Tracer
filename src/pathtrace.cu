@@ -6,6 +6,8 @@
 #include <thrust/remove.h>
 #include <thrust/device_vector.h>
 #include <thrust/remove.h>
+#include <glm/gtc/matrix_inverse.hpp>
+
 
 #include "sceneStructs.h"
 #include "scene.h"
@@ -16,9 +18,10 @@
 #include "intersections.h"
 #include "interactions.h"
 
+
 #define ERRORCHECK 1
 //#define CACHE_FIRST_BOUNCE
-#define ANTIALIAS
+//#define ANTIALIAS
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define checkCUDAError(msg) checkCUDAErrorFn(msg, FILENAME, __LINE__)
@@ -343,6 +346,20 @@ struct streamCompactTest
 	}
 };
 
+void moveGeometry(float t) {
+
+	for (int i = 0; i < hst_scene->geoms.size(); i++) {
+		Geom &g = hst_scene->geoms[i];
+		glm::vec3 new_t = glm::mix(g.translation, g.translation + g.t_motion, t);
+		
+		g.transform = utilityCore::buildTransformationMatrix(
+			new_t, g.rotation, g.scale);
+		g.inverseTransform = glm::inverse(g.transform);
+		g.invTranspose = glm::inverseTranspose(g.transform);
+	}
+
+	cudaMemcpy(dev_geoms, hst_scene->geoms.data(), hst_scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
+}
 /**
  * Wrapper for the __global__ call that sets up the kernel calls and does a ton
  * of memory management
@@ -368,6 +385,12 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 	int depth = 0;
 	PathSegment* dev_path_end = dev_paths + pixelcount;
 	int num_paths = dev_path_end - dev_paths;
+
+	// Move geometry randomly in time
+	thrust::default_random_engine rng = makeSeededRandomEngine(iter, 0, 0);
+	thrust::uniform_real_distribution<float> u01(0, 1);
+	float t = u01(rng);
+	moveGeometry(t);
 
 	// Shoot ray into scene, bounce between objects, push shading chunks
 	bool iterationComplete = false;
