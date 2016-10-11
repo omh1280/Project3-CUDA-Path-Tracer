@@ -3,13 +3,10 @@ CUDA Path Tracer
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 3**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Ottavio Hartman
+* Tested on: Windows 7, Xeon E5-1630 @ 3.70GHz 32GB, GTX 970 4GB (SIG Lab)
 
-### (TODO: Your README)
-
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+![Final render](img/final.png)
 
 #define CACHE_FIRST_BOUNCE 1 // pathtrace.cu
 cache enabled - 800x800, 2 bounces, 300 samples, 35.624s
@@ -21,4 +18,17 @@ disabled - 45.851s
 22.3% faster - 2 bounces
 8.46% faster - 8 bounces
 8.42% faster - 16 bounces
+
+
+## Features
+#### Stream compaction
+#### Motion blur
+#### Textures
+##### Procedural
+##### Bump mapping
+Overview write-up of the feature
+Performance impact of the feature
+If you did something to accelerate the feature, what did you do and why?
+Compare your GPU version of the feature to a HYPOTHETICAL CPU version (you don't have to implement it!) Does it benefit or suffer from being implemented on the GPU?
+How might this feature be optimized beyond your current implementation?
 

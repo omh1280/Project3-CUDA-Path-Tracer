@@ -215,9 +215,9 @@ unsigned char * Material::generateTexture(int x, int y) {
 	for (int i = 0; i < y; i++) {
 		for (int j = 0; j < x; j++) {
 			int index = 3 * (i * x + j);
-			ret[index] = (int)(sin((float)i / 12.f) * 255.0f + cos((float)j / 11.f) * 255.0f);
-			ret[index + 1] = (int)(sin((float)i / 4.f) * 255.0f + cos((float)j / 5.f) * 255.0f);
-			ret[index + 2] = (int)(sin((float)i / 7.f) * 255.0f + cos((float)j / 6.f) * 255.0f);
+			ret[index] = (int)(sin((float)i / 32.f) * 255.0f + cos((float)j / 31.f) * 255.0f);
+			ret[index + 1] = (int)(sin((float)i / 40.f) * 255.0f + cos((float)j / 50.f) * 255.0f);
+			ret[index + 2] = (int)(sin((float)i / 70.f) * 255.0f + cos((float)j / 60.f) * 255.0f);
 		}
 	};
 	return ret;
