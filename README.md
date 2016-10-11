@@ -24,13 +24,25 @@ Further optimization could use the topics learned in class to more efficiently s
 
 #### Motion blur
 I implemented a way to describe the translational and rotational motion of objects in the scene, as well as a motion blur. There is no "shutter speed" or anything like that; it simply blurs the objects over the entirety of their movement. The `T_MOTION` and `R_MOTION` in the `*.txt` scene files describe the __relative__ motion from the starting transformation.
+
 ![motion blur](img/motion_blur.png)
+
 ![motion blur](img/motion_blur2.png)
+
 ![motion blur](img/motion_blur3.png)
 
+In terms of performance hit, this is a super-low cost addition. This is because, the way I have implemented motion blur, the scene's objects are moved randomly along their transformation "line" each iteration. This involves calculating a random `t` between 0.0 and 1.0, calculating a new transformation, and then re-loading the objects into device memory using `cudaMemcpy`. This is all surprisingly very cheap: at resolution 800x800, 12 depth, 1000 samples, and 2 motion blurred objects the render took 71.588s. Without motion blur it took 73.507s. Despite the motion blur actually being quicker, it seems that they are just close enough that is within the margin of error of performance (on this computer).
+
+The actual movement of the objects in the scene is being done on the CPU. This is efficient enough for the simple scenes I have included, however this would be a perfect thing to move to the GPU. The objects can be quickly transformed on the GPU, which would be very efficient when there are 1,000s of objects in the scene.
+
 #### Textures
+
+![texture](img/texture1.png)
 ##### Procedural
+![procedural](img/procedural.png)
 ##### Bump mapping
+![bump](img/bump2.png)
+![bump](img/bump.png)
 Overview write-up of the feature
 Performance impact of the feature
 If you did something to accelerate the feature, what did you do and why?

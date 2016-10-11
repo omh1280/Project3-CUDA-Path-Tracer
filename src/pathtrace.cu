@@ -21,7 +21,7 @@
 
 #define ERRORCHECK 1
 //#define CACHE_FIRST_BOUNCE
-
+#define MOTION_BLUR
 #define PROCEDURAL
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -413,6 +413,7 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 	PathSegment* dev_path_end = dev_paths + pixelcount;
 	int num_paths = dev_path_end - dev_paths;
 
+#ifdef MOTION_BLUR
 	// Move geometry randomly in time
 	thrust::default_random_engine rng = makeSeededRandomEngine(iter, 0, 0);
 	thrust::uniform_real_distribution<float> u01(0, 1);
@@ -420,6 +421,7 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 	hst_scene->moveGeometry(t);
 	cudaMemcpy(dev_geoms, hst_scene->geoms.data(), hst_scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
 
+#endif
 	// Shoot ray into scene, bounce between objects, push shading chunks
 	bool iterationComplete = false;
 	while (!iterationComplete) {
