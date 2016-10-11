@@ -210,15 +210,15 @@ void Scene::moveGeometry(float t) {
 
 }
 
-float * Material::generateTexture(int x, int y) {
-	float * ret = new float[3 * x * y];
+unsigned char * Material::generateTexture(int x, int y) {
+	unsigned char * ret = new unsigned char[3 * x * y];
 	for (int i = 0; i < y; i++) {
 		for (int j = 0; j < x; j++) {
 			int index = 3 * (i * x + j);
-			ret[index] = (float)i / (float)x;
-			ret[index + 1] = 0.0f;
-			ret[index + 2] = 0.0f;
+			ret[index] = (int)(sin((float)i / 12.f) * 255.0f + cos((float)j / 11.f) * 255.0f);
+			ret[index + 1] = (int)(sin((float)i / 4.f) * 255.0f + cos((float)j / 5.f) * 255.0f);
+			ret[index + 2] = (int)(sin((float)i / 7.f) * 255.0f + cos((float)j / 6.f) * 255.0f);
 		}
-	}
+	};
 	return ret;
 }

@@ -100,7 +100,7 @@ __host__ __device__ float boxIntersectionTest(Geom box, Ray r,
  * @return                   Ray parameter `t` value. -1 if no intersection.
  */
 __host__ __device__ float sphereIntersectionTest(Geom sphere, Ray r,
-        glm::vec3 &intersectionPoint, glm::vec2 &uv, glm::vec3 &normal, bool &outside) {
+        glm::vec3 &intersectionPoint, glm::vec2 &uv, glm::vec3 &normal, glm::vec3 &binormal, bool &outside) {
     float radius = .5;
 
     glm::vec3 ro = multiplyMV(sphere.inverseTransform, glm::vec4(r.origin, 1.0f));
@@ -136,12 +136,15 @@ __host__ __device__ float sphereIntersectionTest(Geom sphere, Ray r,
 
     intersectionPoint = multiplyMV(sphere.transform, glm::vec4(objspaceIntersection, 1.f));
     normal = glm::normalize(multiplyMV(sphere.invTranspose, glm::vec4(objspaceIntersection, 0.f)));
-	
+	binormal = glm::normalize(multiplyMV(sphere.invTranspose,
+		glm::vec4(glm::cross(objspaceIntersection, glm::vec3(1.0, 0.0, 0.0)), 0.0f)));
+
 	// Calculate uv
 	float u = 0.5 + atan2(objspaceIntersection.z, objspaceIntersection.x) / (2.0*PI);
 	float v = 0.5 - asin(objspaceIntersection.y) / PI;
 	uv.x = u;
 	uv.y = v;
+	//printf("%f, %f\n", uv.x, uv.y);
 	uv = glm::clamp(uv, 0.0f, 1.0f);
 
 	if (!outside) {

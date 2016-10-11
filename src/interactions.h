@@ -94,11 +94,13 @@ void scatterRay(
 			int g = (int)m.data[index + 1];
 			int b = (int)m.data[index + 2];
 
-			color = glm::vec3((float)r / (255.0f), (float)g / 255.0f, (float)b / 255.0f);
+			color = glm::vec3((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f);
 		}
 		else {
 			// Bump
-			glm::ivec2 pixel((int)floor(intersection.uv.x * (float)m.x), (int)floor(intersection.uv.y * (float)m.y));
+			glm::ivec2 pixel((int)floor(intersection.uv.x * 4.0f * (float)m.x), (int)floor(intersection.uv.y * 4.0f * (float)m.y));
+			pixel = glm::ivec2(pixel.x % m.x, pixel.y % m.y);
+
 			int index = 3 * (pixel.y * m.x + pixel.x);
 
 			//printf("Index: %i, %i, %i\n", index, pixel.x, pixel.y);
@@ -106,14 +108,16 @@ void scatterRay(
 			int g = (int)m.data[index + 1];
 			int b = (int)m.data[index + 2];
 
-			color = glm::vec3(0.5f);// glm::vec3((float)r / (255.0f), (float)g / 255.0f, (float)b / 255.0f);
+			color = glm::vec3(0.7f);// glm::vec3((float)r / (255.0f), (float)g / 255.0f, (float)b / 255.0f);
 
 			glm::vec3 normal_map;
 			normal_map.x = (float)(r - 128) / 128.0f;
 			normal_map.y = (float)(g - 128) / 128.0f;
 			normal_map.z = (float)(b - 128) / 128.0f;
 
-			normal -= normal_map;
+			normal = glm::vec3(intersection.binormal.x * normal_map.x,
+					intersection.binormal.y * normal_map.y,
+					intersection.binormal.z * normal_map.z);
 		}
 	}
 

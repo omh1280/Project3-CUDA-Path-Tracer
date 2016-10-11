@@ -47,7 +47,7 @@ struct Material {
 	int y;
 
 	// Defined in scene.cpp
-	static float *generateTexture(int x, int y);
+	static unsigned char *generateTexture(int x, int y);
 };
 
 struct Camera {
@@ -84,4 +84,5 @@ struct ShadeableIntersection {
   glm::vec3 surfaceNormal;
   int materialId;
   glm::vec2 uv;
+  glm::vec3 binormal;
 };

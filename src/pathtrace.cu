@@ -21,7 +21,8 @@
 
 #define ERRORCHECK 1
 //#define CACHE_FIRST_BOUNCE
-//#define ANTIALIAS
+
+#define PROCEDURAL
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define checkCUDAError(msg) checkCUDAErrorFn(msg, FILENAME, __LINE__)
@@ -99,11 +100,15 @@ void pathtraceInit(Scene *scene) {
   	cudaMemcpy(dev_geoms, scene->geoms.data(), scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
 
 	// Initialize texture
-
-	//float *data = Material::generateTexture(1024, 1024);
+#ifdef PROCEDURAL
+	int x = 1024;
+	int y = 1024;
+	unsigned char *data = Material::generateTexture(x, y);
+#else
 	int x, y, n;
-	unsigned char *data = stbi_load("../src/bump.jpg", &x, &y, &n, 3);
-	
+	unsigned char *data = stbi_load("../src/bump2.jpg", &x, &y, &n, 3);
+#endif
+
 	if (data) {
 		cudaMalloc(&dev_texture, 3 * x * y * sizeof(unsigned char));
 		cudaMemcpy(dev_texture, data, 3 * x * y * sizeof(unsigned char), cudaMemcpyHostToDevice);
@@ -119,8 +124,12 @@ void pathtraceInit(Scene *scene) {
 		printf("ERROR: Could not find texture!\n");
 	}
 
+#ifdef PROCEDURAL
+	delete[] data;
+#else
 	stbi_image_free(data);
-	
+#endif
+
   	cudaMalloc(&dev_materials, scene->materials.size() * sizeof(Material));
   	cudaMemcpy(dev_materials, scene->materials.data(), scene->materials.size() * sizeof(Material), cudaMemcpyHostToDevice);
 
@@ -212,6 +221,7 @@ __global__ void computeIntersections(
 		glm::vec3 intersect_point;
 		glm::vec2 uv;
 		glm::vec3 normal;
+		glm::vec3 binormal;
 		float t_min = FLT_MAX;
 		int hit_geom_index = -1;
 		bool outside = true;
@@ -219,6 +229,7 @@ __global__ void computeIntersections(
 		glm::vec3 tmp_intersect;
 		glm::vec2 tmp_uv;
 		glm::vec3 tmp_normal;
+		glm::vec3 tmp_binormal;
 
 		// naive parse through global geoms
 
@@ -232,7 +243,7 @@ __global__ void computeIntersections(
 			}
 			else if (geom.type == SPHERE)
 			{
-				t = sphereIntersectionTest(geom, pathSegment.ray, tmp_intersect, tmp_uv, tmp_normal, outside);
+				t = sphereIntersectionTest(geom, pathSegment.ray, tmp_intersect, tmp_uv, tmp_normal, tmp_binormal, outside);
 			}
 
 			// Compute the minimum t from the intersection tests to determine what
@@ -244,6 +255,7 @@ __global__ void computeIntersections(
 				intersect_point = tmp_intersect;
 				uv = tmp_uv;
 				normal = tmp_normal;
+				binormal = tmp_binormal;
 			}
 		}
 
@@ -258,6 +270,7 @@ __global__ void computeIntersections(
 			intersections[path_index].materialId = geoms[hit_geom_index].materialid;
 			intersections[path_index].surfaceNormal = normal;
 			intersections[path_index].uv = uv;
+			intersections[path_index].binormal = binormal;
 		}
 	}
 }
