@@ -50,7 +50,7 @@ EMITTANCE   0
 
 // Lamp
 MATERIAL 5
-RGB         .5 .18 .18
+RGB         .3 .28 .38
 SPECEX      0
 SPECRGB     .98 .98 .98
 REFL        0
@@ -66,14 +66,14 @@ SPECRGB     .98 .98 .98
 REFL        0
 REFR        0
 REFRIOR     0
-TEXTURE		
+TEXTURE_BUMP		
 
 // Camera
 CAMERA
-RES         600 600
+RES         800 800
 FOVY        35
 ITERATIONS  5000
-DEPTH       4
+DEPTH       16
 FILE        cornell2
 EYE         0.0 5 10
 LOOKAT      0 5 0

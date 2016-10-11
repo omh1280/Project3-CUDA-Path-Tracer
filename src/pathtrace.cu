@@ -81,7 +81,7 @@ static Material * dev_materials = NULL;
 static PathSegment * dev_paths = NULL;
 static ShadeableIntersection * dev_intersections = NULL;
 static ShadeableIntersection * dev_first_intersections = NULL;
-static float * dev_texture = NULL;
+static unsigned char * dev_texture = NULL;
 // TODO: static variables for device memory, any extra info you need, etc
 // ...
 
@@ -99,12 +99,28 @@ void pathtraceInit(Scene *scene) {
   	cudaMemcpy(dev_geoms, scene->geoms.data(), scene->geoms.size() * sizeof(Geom), cudaMemcpyHostToDevice);
 
 	// Initialize texture
-	//int x, y, n;
-	//unsigned char *data = stbi_load("texture.jpg", &x, &y, &n, 0);
-	float *data = Material::generateTexture(1024, 1024);
-	cudaMalloc(&dev_texture, 3 * 1024 * 1024 * sizeof(float));
-	cudaMemcpy(dev_texture, data, 3 * 1024 * 1024 * sizeof(float), cudaMemcpyHostToDevice);
 
+	//float *data = Material::generateTexture(1024, 1024);
+	int x, y, n;
+	unsigned char *data = stbi_load("../src/bump.jpg", &x, &y, &n, 3);
+	
+	if (data) {
+		cudaMalloc(&dev_texture, 3 * x * y * sizeof(unsigned char));
+		cudaMemcpy(dev_texture, data, 3 * x * y * sizeof(unsigned char), cudaMemcpyHostToDevice);
+		for (int i = 0; i < hst_scene->materials.size(); i++){
+			if (hst_scene->materials[i].hasTexture) {
+				hst_scene->materials[i].data = dev_texture;
+				hst_scene->materials[i].x = x;
+				hst_scene->materials[i].y = y;
+			}
+		}
+	}
+	else {
+		printf("ERROR: Could not find texture!\n");
+	}
+
+	stbi_image_free(data);
+	
   	cudaMalloc(&dev_materials, scene->materials.size() * sizeof(Material));
   	cudaMemcpy(dev_materials, scene->materials.data(), scene->materials.size() * sizeof(Material), cudaMemcpyHostToDevice);
 
@@ -124,6 +140,7 @@ void pathtraceFree() {
   	cudaFree(dev_materials);
   	cudaFree(dev_intersections);
 	cudaFree(dev_first_intersections);
+	cudaFree(dev_texture);
     // TODO: clean up any extra device memory you created
 
     checkCUDAError("pathtraceFree");
@@ -299,7 +316,7 @@ __global__ void shadeFakeMaterial (
 }
 
 __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection * shadeableIntersections,
-	PathSegment * pathSegments, Material * materials, float * texture)
+	PathSegment * pathSegments, Material * materials)
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (idx < num_paths)
@@ -326,7 +343,7 @@ __global__ void shadeRealMaterial(int iter, int num_paths, ShadeableIntersection
 				pathSegments[idx].remainingBounces = -1;
 			}
 			else {
-				scatterRay(pathSegments[idx], intersection, material, rng, texture);
+				scatterRay(pathSegments[idx], intersection, material, rng);
 			}
 		}
 		else {
@@ -438,7 +455,7 @@ void pathtrace(uchar4 *pbo, int frame, int iter) {
 		depth++;
 
 		// Shading
-		shadeRealMaterial << <numblocksPathSegmentTracing, blockSize1d >> > (iter, num_paths, dev_intersections, dev_paths, dev_materials, dev_texture);
+		shadeRealMaterial << <numblocksPathSegmentTracing, blockSize1d >> > (iter, num_paths, dev_intersections, dev_paths, dev_materials);
 
 #endif
 		

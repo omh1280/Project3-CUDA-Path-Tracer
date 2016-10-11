@@ -185,7 +185,9 @@ int Scene::loadMaterial(string materialid) {
             } else if (strcmp(tokens[0].c_str(), "EMITTANCE") == 0) {
                 newMaterial.emittance = atof(tokens[1].c_str());
 			} else if (strcmp(tokens[0].c_str(), "TEXTURE") == 0) {
-				newMaterial.hasTexture = true;
+				newMaterial.hasTexture = 1;
+			} else if (strcmp(tokens[0].c_str(), "TEXTURE_BUMP") == 0) {
+				newMaterial.hasTexture = 2;
 			}
         }
         materials.push_back(newMaterial);

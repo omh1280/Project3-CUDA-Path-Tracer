@@ -38,10 +38,11 @@ struct Material {
     } specular;
     float hasReflective;
     float hasRefractive;
-	bool hasTexture = false;
+	// 0 = no texture, 1 = texture, 2 = bump
+	int hasTexture = 0;
     float indexOfRefraction;
     float emittance;
-	float *data;
+	unsigned char *data;
 	int x;
 	int y;
 

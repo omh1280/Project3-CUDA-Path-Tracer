@@ -73,26 +73,48 @@ void scatterRay(
 		PathSegment & pathSegment,
         ShadeableIntersection intersection,
         const Material &m,
-        thrust::default_random_engine &rng,
-		float * texture) 
+        thrust::default_random_engine &rng) 
 {
 	glm::vec3 intersect = getPointOnRay(pathSegment.ray, intersection.t);
 	glm::vec3 normal = intersection.surfaceNormal;
 
 	glm::vec3 color;
-	if (!m.hasTexture) {
+	if (m.hasTexture == 0) {
 		color = m.color;
 	}
 	else {
-		glm::ivec2 pixel((int)floor(intersection.uv.x * (float)m.x), (int)floor(intersection.uv.y * (float)m.y));
-		int index = 3 * (pixel.y * m.x + pixel.x);
+		if (m.hasTexture == 1) {
+			// Normal texture
 
-		//printf("Index: %i, %i, %i\n", index, pixel.x, pixel.y);
-		float r = texture[index];
-		float g = texture[index + 1];
-		float b = texture[index + 2];
+			glm::ivec2 pixel((int)floor(intersection.uv.x * (float)m.x), (int)floor(intersection.uv.y * (float)m.y));
+			int index = 3 * (pixel.y * m.x + pixel.x);
 
-		color = glm::vec3(r, g, b);
+			//printf("Index: %i, %i, %i\n", index, pixel.x, pixel.y);
+			int r = (int)m.data[index];
+			int g = (int)m.data[index + 1];
+			int b = (int)m.data[index + 2];
+
+			color = glm::vec3((float)r / (255.0f), (float)g / 255.0f, (float)b / 255.0f);
+		}
+		else {
+			// Bump
+			glm::ivec2 pixel((int)floor(intersection.uv.x * (float)m.x), (int)floor(intersection.uv.y * (float)m.y));
+			int index = 3 * (pixel.y * m.x + pixel.x);
+
+			//printf("Index: %i, %i, %i\n", index, pixel.x, pixel.y);
+			int r = (int)m.data[index];
+			int g = (int)m.data[index + 1];
+			int b = (int)m.data[index + 2];
+
+			color = glm::vec3(0.5f);// glm::vec3((float)r / (255.0f), (float)g / 255.0f, (float)b / 255.0f);
+
+			glm::vec3 normal_map;
+			normal_map.x = (float)(r - 128) / 128.0f;
+			normal_map.y = (float)(g - 128) / 128.0f;
+			normal_map.z = (float)(b - 128) / 128.0f;
+
+			normal -= normal_map;
+		}
 	}
 
 	thrust::uniform_real_distribution<float> u01(0, 1);
