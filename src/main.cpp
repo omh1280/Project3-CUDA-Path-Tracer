@@ -144,7 +144,7 @@ void runCuda() {
         // unmap buffer object
         cudaGLUnmapBufferObject(pbo);
 
-		if (iteration == 1000) {
+		if (iteration == 500) {
 			auto end = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin_time).count() << "ns" << std::endl;
 		}

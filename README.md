@@ -36,12 +36,18 @@ In terms of performance hit, this is a super-low cost addition. This is because,
 The actual movement of the objects in the scene is being done on the CPU. This is efficient enough for the simple scenes I have included, however this would be a perfect thing to move to the GPU. The objects can be quickly transformed on the GPU, which would be very efficient when there are 1,000s of objects in the scene.
 
 #### Textures
-
+This renderer includes an implementation of rendering textures from files, bump maps, and procedural texture generation. 
 ![texture](img/texture1.png)
+
+In order to render textures on spheres, I added a way to pass the `uv` coordinate of intersections to the BRDF shader. The `uv` calculation for a sphere is very simple so the performance hit is minimal. However, the texture lookup operation should contribute a performance hit since each time a ray intersects the texture surface it needs to look up a pixel on the texture. As it turns out the difference is minimal: 34.205s render with textures, 33.938 without. 
+
+texture - 34.205s
+no texture - 33.938
 ##### Procedural
 ![procedural](img/procedural.png)
 ##### Bump mapping
 ![bump](img/bump2.png)
+![bump](src/bump2.jpg)
 ![bump](img/bump.png)
 Overview write-up of the feature
 Performance impact of the feature

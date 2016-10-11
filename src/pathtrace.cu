@@ -22,7 +22,7 @@
 #define ERRORCHECK 1
 //#define CACHE_FIRST_BOUNCE
 #define MOTION_BLUR
-#define PROCEDURAL
+//#define PROCEDURAL
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define checkCUDAError(msg) checkCUDAErrorFn(msg, FILENAME, __LINE__)
