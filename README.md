@@ -16,8 +16,18 @@ In `pathtrace.cu`, there is a toggle `CACHE_FIRST_BOUNCE` which changes whether 
 
 ![cache](img/cache.png)
 
-There is a clear improvement with caching the first intersection, but it is also important to see that the performance benefit shrinks as the depth increases. For 2 bounces, there was a 22.3% increase in speed, 8 bounces had a 8.46% increase, and 16 bounces had a 8.42% increase.
+There is a clear improvement with caching the first intersection, but it is also important to see that the performance benefit shrinks as the depth increases. For 2 bounces, there was a __22.3%__ increase in speed, 8 bounces had a __8.46%__ increase, and 16 bounces had a __8.42%__ increase.
+
+If intersection caching were implemented on the CPU, it would be much slower. This feature is really meant for the GPU because it is already being used to calculate all of the intersections; there is no point in moving the code to the CPU just to cache the first intersections.
+
+Further optimization could use the topics learned in class to more efficiently store the cached intersections. I did not pay any attention to the order in which memory was accessed--that is, global memory may be getting retrieved at random, non-contiguos locations. This is a huge performance hit which could be reduced with regard to how global memory is retrieved.
+
 #### Motion blur
+I implemented a way to describe the translational and rotational motion of objects in the scene, as well as a motion blur. There is no "shutter speed" or anything like that; it simply blurs the objects over the entirety of their movement. The `T_MOTION` and `R_MOTION` in the `*.txt` scene files describe the __relative__ motion from the starting transformation.
+![motion blur](img/motion_blur.png)
+![motion blur](img/motion_blur2.png)
+![motion blur](img/motion_blur3.png)
+
 #### Textures
 ##### Procedural
 ##### Bump mapping
