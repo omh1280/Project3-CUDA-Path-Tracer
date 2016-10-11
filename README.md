@@ -13,11 +13,10 @@ CUDA Path Tracer
 One of the easiest things to cache in a pathtracer is the first-bounce intersection point. While this efficiency can be implemented simply, it relies on some conditions which other features may break: for example, motion blur does not allow for first-bounce caching because the objects in the scene may move.
 
 In `pathtrace.cu`, there is a toggle `CACHE_FIRST_BOUNCE` which changes whether or not the first intersection is cached. The performance data is as follows:
+
 ![cache](img/cache.png)
 
-22.3% faster - 2 bounces
-8.46% faster - 8 bounces
-8.42% faster - 16 bounces
+There is a clear improvement with caching the first intersection, but it is also important to see that the performance benefit shrinks as the depth increases. For 2 bounces, there was a 22.3% increase in speed, 8 bounces had a 8.46% increase, and 16 bounces had a 8.42% increase.
 #### Motion blur
 #### Textures
 ##### Procedural
