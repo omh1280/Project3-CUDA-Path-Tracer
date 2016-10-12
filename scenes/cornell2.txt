@@ -6,7 +6,7 @@ SPECRGB     0 0 0
 REFL        0
 REFR        0
 REFRIOR     0
-EMITTANCE   7
+EMITTANCE   3
 
 // Diffuse white
 MATERIAL 1
@@ -96,7 +96,7 @@ cube
 material 0
 TRANS       0 10 0
 ROTAT       0 0 0
-SCALE       3 .3 3
+SCALE       7 .3 7
 
 // Floor
 OBJECT 1
@@ -190,9 +190,9 @@ ROTAT 0 45 30
 SCALE 3 4 2
 
 // sphere 2
-OBJECT 12
-sphere
-material 7
-TRANS 1 6 -2
-ROTAT 0 0 0
-SCALE 3 3 3
+//OBJECT 12
+//sphere
+//material 7
+//TRANS 1 6 -2
+//ROTAT 0 0 0
+//SCALE 3 3 3
