@@ -56,6 +56,7 @@ The most obvious optimization would be to implement this procedural texture gene
 ![bump](img/bump2.png)
 ![bump](src/bump2.jpg)
 ![bump](img/bump.png)
+
 Bump mapping is implemented using a normal map. Instead of simply applying the color of each pixel to the object, the pixel color is used as the basis for changing the normal of the surface so that all bounced rays react as if the surface is bumpy. In order to calculate the new normal, the binormal and tangent vectors of the surface at the intersection are used. This allows the normal to move with regard to the normal map.
 
 The performance impact of bump mapping is small because it has the same overhead as the texture lookup with some simple mathematical operations included. The time for a 800x800 render without bump mapping is 34.411s, whereas with bump mapping is 34.928s. Of course, as with the other textures, the more bump maps are added to the scene the higher the performance hit.
