@@ -39,19 +39,25 @@ The actual movement of the objects in the scene is being done on the CPU. This i
 This renderer includes an implementation of rendering textures from files, bump maps, and procedural texture generation. 
 ![texture](img/texture1.png)
 
-In order to render textures on spheres, I added a way to pass the `uv` coordinate of intersections to the BRDF shader. The `uv` calculation for a sphere is very simple so the performance hit is minimal. However, the texture lookup operation should contribute a performance hit since each time a ray intersects the texture surface it needs to look up a pixel on the texture. As it turns out the difference is minimal: 34.205s render with textures, 33.938 without. 
+In order to render textures on spheres, I added a way to pass the `uv` coordinate of intersections to the BRDF shader. The `uv` calculation for a sphere is very simple so the performance hit is small. However, the texture lookup operation should contribute a performance hit since each time a ray intersects the texture surface it needs to look up a pixel on the texture. As it turns out the difference is minimal: 34.205s render with textures, 33.938 without. I think one of the reasons the texture lookup does not have a huge performance hit is because it is looking up only one texture. In a full scene with multiple textures for each material (bump, specular, albedo, etc.), this would clearly increase the render time.
 
-texture - 34.205s
-no texture - 33.938
+In order to improve the efficiency of texture lookups, one thing I could do is reduce the texture sizes using mipmap, so that as a material's distance from the camera increases the render will use a smaller size texture to represent it. This works because the high resolution of textures is unneeded when an object is far away.
+
+Another optimization which would increase render time but would make the visual quality improve is texture filtering. As it stands, the render simply picks a single pixel in the texture as the color for the ray. Because of this, there is some minor artifacting and aliasing. I could add a texture filter to sample surrounding pixels and effectively "blur" the values, but this would increase computation.
+
 ##### Procedural
+There is a mechanism in place to render a procedural texture. A function populates an array with R, G, and B values according to the pixel location. Due to time constraints, this is being done on the CPU, but it would be much more efficient on the GPU. The GPU would be able to run this in parallel for on-the-fly procedural texture generation (as it stands, the texture is generated once at the beginning of the render).
+
+The most obvious optimization would be to implement this procedural texture generation on the GPU. Since the texture is never changing throughout the render, however, it does not make a whole lot of difference because it is just overhead at the beginning of the render. This is because I have implemented the procedural texture as an array, as opposed to a texture "look-up" where each query to the material would run a function to decide its color.
+
 ![procedural](img/procedural.png)
+
 ##### Bump mapping
 ![bump](img/bump2.png)
 ![bump](src/bump2.jpg)
 ![bump](img/bump.png)
-Overview write-up of the feature
-Performance impact of the feature
-If you did something to accelerate the feature, what did you do and why?
-Compare your GPU version of the feature to a HYPOTHETICAL CPU version (you don't have to implement it!) Does it benefit or suffer from being implemented on the GPU?
-How might this feature be optimized beyond your current implementation?
+Bump mapping is implemented using a normal map. Instead of simply applying the color of each pixel to the object, the pixel color is used as the basis for changing the normal of the surface so that all bounced rays react as if the surface is bumpy. In order to calculate the new normal, the binormal and tangent vectors of the surface at the intersection are used. This allows the normal to move with regard to the normal map.
 
+The performance impact of bump mapping is small because it has the same overhead as the texture lookup with some simple mathematical operations included. The time for a 800x800 render without bump mapping is 34.411s, whereas with bump mapping is 34.928s. Of course, as with the other textures, the more bump maps are added to the scene the higher the performance hit.
+
+Similar efficiencies can be applied to bump mapping as texturing.
